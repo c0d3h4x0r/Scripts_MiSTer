@@ -37,70 +37,6 @@
 
 
 
-#=========   USER OPTIONS   =========
-#You can edit these user options or make an ini file with the same
-#name as the script, i.e. mount_cifs.ini, containing the same options.
-
-#Your CIFS Server, i.e. your NAS name or its IP address.
-SERVER=""
-
-#The share name on the Server.
-SHARE="MiSTer"
-
-#Use this if only a specific directory from the share's root should be mounted.
-SHARE_DIRECTORY=""
-
-#The user name, leave blank for guest access.
-USERNAME=""
-
-#The user password, irrelevant (leave blank) for guest access.
-PASSWORD=""
-
-#Optional user domain, when in doubt leave blank.
-DOMAIN=""
-
-#Local directory/directories where the share will be mounted.
-#- It can ba a single directory, i.e. "cifs", so the remote share, i.e. \\NAS\MiSTer
-#  will be directly mounted on /media/fat/cifs (/media/fat is the root of the SD card).
-#  NOTE: /media/fat/cifs is a special location that the mister binary will try before looking in
-# the standard games location of /media/fat/games, so "cifs" is the suggested setting.
-#- It can be a pipe "|" separated list of directories, i.e. "Amiga|C64|NES|SNES",
-#  so the share subdirectiories with those names,
-#  i.e. \\NAS\MiSTer\Amiga, \\NAS\MiSTer\C64, \\NAS\MiSTer\NES and \\NAS\MiSTer\SNES
-#  will be mounted on local /media/fat/Amiga, /media/fat/C64, /media/fat/NES and /media/fat/SNES.
-#- It can be an asterisk "*": when SINGLE_CIFS_CONNECTION="true",
-#  all the directories in the remote share will be listed and mounted locally,
-#  except the special ones (i.e. linux and config);
-#  when SINGLE_CIFS_CONNECTION="false" all the directories in the SD root,
-#  except the special ones (i.e. linux and config), will be mounted when one
-#  with a matching name is found on the remote share.
-LOCAL_DIR="cifs"
-
-#Optional additional mount options, when in doubt leave blank.
-#If you have problems not related to username/password, you can try "vers=2.0" or "vers=3.0".
-ADDITIONAL_MOUNT_OPTIONS=""
-
-#"true" in order to wait for the CIFS server to be reachable;
-#useful when using this script at boot time.
-WAIT_FOR_SERVER="false"
-
-#"true" for automounting CIFS shares at boot time;
-#it will create start/kill scripts in /etc/network/if-up.d and /etc/network/if-down.d.
-MOUNT_AT_BOOT="false"
-
-
-
-#========= ADVANCED OPTIONS =========
-BASE_PATH="/media/fat"
-#MISTER_CIFS_URL="https://github.com/MiSTer-devel/CIFS_MiSTer"
-KERNEL_MODULES="md4.ko|md5.ko|des_generic.ko|fscache.ko|cifs.ko"
-IFS="|"
-SINGLE_CIFS_CONNECTION="true"
-#Pipe "|" separated list of directories which will never be mounted when LOCAL_DIR="*"
-SPECIAL_DIRECTORIES="config|linux|System Volume Information"
-
-
-
 #=========CODE STARTS HERE=========
 
 THIS_SCRIPT_PATH="$0"
@@ -108,7 +44,7 @@ if [ "$THIS_SCRIPT_PATH" == "bash" ]
 then
 	THIS_SCRIPT_PATH=$(ps | grep "^ *$PPID " | grep -o "[^ ]*$")
 fi
-INI_PATH=${THIS_SCRIPT_PATH%.*}.ini
+INI_PATH=${THIS_SCRIPT_PATH%.*}/options.ini
 if [ -f $INI_PATH ]
 then
 	eval "$(cat $INI_PATH | tr -d '\r')"
