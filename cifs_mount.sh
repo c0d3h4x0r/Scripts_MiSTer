@@ -71,31 +71,6 @@ for KERNEL_MODULE in $KERNEL_MODULES; do
 			echo "Please update your"
 			echo "MiSTer Linux system."
 			exit 1
-#			if ! insmod "/media/fat/linux/$KERNEL_MODULE" > /dev/null 2>&1
-#			then
-#				echo "Downloading $KERNEL_MODULE"
-#				curl -L "$MISTER_CIFS_URL/blob/master/$KERNEL_MODULE?raw=true" -o "/media/fat/linux/$KERNEL_MODULE"
-#				case $? in
-#					0)
-#						;;
-#					60)
-#						if ! curl -kL "$MISTER_CIFS_URL/blob/master/$KERNEL_MODULE?raw=true" -o "/media/fat/linux/$KERNEL_MODULE"
-#						then
-#							echo "No Internet connection"
-#							exit 2
-#						fi
-#						;;
-#					*)
-#						echo "No Internet connection"
-#						exit 2
-#						;;
-#				esac
-#				if ! insmod "/media/fat/linux/$KERNEL_MODULE" > /dev/null 2>&1
-#				then
-#					echo "Unable to load $KERNEL_MODULE"
-#					exit 1
-#				fi
-#			fi
 		fi
 	fi
 done
