@@ -70,7 +70,7 @@ if [ "$SERVER" == "" ]; then
 	exit 1
 fi
 
-for KERNEL_MODULE in $KERNEL_MODULES; do
+IFS="|"; for KERNEL_MODULE in $KERNEL_MODULES; do
 	if ! cat /lib/modules/$(uname -r)/modules.builtin | grep -q "$(echo "$KERNEL_MODULE" | sed 's/\./\\\./g')"; then
 		if ! lsmod | grep -q "${KERNEL_MODULE%.*}"; then
 			echo "The current Kernel doesn't"
@@ -164,7 +164,7 @@ resolve_local_dir_asterisk() {
 	for DIRECTORY in "$1"/*; do
 		if [ -d "$DIRECTORY" ]; then
 			DIRECTORY=$(basename "$DIRECTORY")
-			for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES; do
+			IFS="|"; for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES; do
 				if [ "$DIRECTORY" == "$SPECIAL_DIRECTORY" ]; then
 					DIRECTORY=""
 					break
@@ -173,14 +173,14 @@ resolve_local_dir_asterisk() {
 			if [ "$DIRECTORY" == "" ]; then
 				continue
 			if [ "$LOCAL_DIR" != "" ]; then
-				LOCAL_DIR="$LOCAL_DIR|"
+				LOCAL_DIR="$LOCAL_DIR$LOCAL_DIRS_IFS"
 			fi
 			LOCAL_DIR="$LOCAL_DIR$DIRECTORY"
 		fi
 	done
 }
 
-if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "|"; }; then
+if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "$LOCAL_DIRS_IFS"; }; then
 	if [ "$SINGLE_CIFS_CONNECTION" == "true" ]; then
 		SCRIPT_NAME=${THIS_SCRIPT_PATH##*/}
 		SCRIPT_NAME=${SCRIPT_NAME%.*}
@@ -192,7 +192,7 @@ if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "|"; }; then
 				for DIRECTORY in "/tmp/$SCRIPT_NAME"/*; do
 					if [ -d "$DIRECTORY" ]; then
 						DIRECTORY=$(basename "$DIRECTORY")
-						for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES; do
+						IFS="|"; for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES; do
 							if [ "$DIRECTORY" == "$SPECIAL_DIRECTORY" ]; then
 								DIRECTORY=""
 								break
@@ -200,14 +200,14 @@ if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "|"; }; then
 						done
 						if [ "$DIRECTORY" != "" ]; then
 							if [ "$LOCAL_DIR" != "" ]; then
-								LOCAL_DIR="$LOCAL_DIR|"
+								LOCAL_DIR="$LOCAL_DIR$LOCAL_DIRS_IFS"
 							fi
 							LOCAL_DIR="$LOCAL_DIR$DIRECTORY"
 						fi
 					fi
 				done
 			fi
-			for DIRECTORY in $LOCAL_DIR; do
+			IFS="$LOCAL_DIRS_IFS"; for DIRECTORY in $LOCAL_DIR; do
 				mkdir -p "$BASE_PATH/$DIRECTORY" > /dev/null 2>&1
 				if mount --bind "/tmp/$SCRIPT_NAME/$DIRECTORY" "$BASE_PATH/$DIRECTORY"; then
 					echo "$DIRECTORY mounted"
@@ -222,7 +222,7 @@ if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "|"; }; then
 		if [ "$LOCAL_DIR" == "*" ]; then
 			resolve_local_dir_asterisk "$BASE_PATH"
 		fi
-		for DIRECTORY in $LOCAL_DIR; do
+		IFS="$LOCAL_DIRS_IFS"; for DIRECTORY in $LOCAL_DIR; do
 			mkdir -p "$BASE_PATH/$DIRECTORY" > /dev/null 2>&1
 			if mount -t cifs "$MOUNT_SOURCE" "$BASE_PATH/$DIRECTORY" -o "$MOUNT_OPTIONS"; then
 				echo "$DIRECTORY mounted"
