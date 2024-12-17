@@ -40,18 +40,15 @@
 #=========CODE STARTS HERE=========
 
 THIS_SCRIPT_PATH="$0"
-if [ "$THIS_SCRIPT_PATH" == "bash" ]
-then
+if [ "$THIS_SCRIPT_PATH" == "bash" ]; then
 	THIS_SCRIPT_PATH=$(ps | grep "^ *$PPID " | grep -o "[^ ]*$")
 fi
 INI_PATH=${THIS_SCRIPT_PATH%.*}/options.ini
-if [ -f $INI_PATH ]
-then
+if [ -f $INI_PATH ]; then
 	eval "$(cat $INI_PATH | tr -d '\r')"
 fi
 
-if [ "$SERVER" == "" ]
-then
+if [ "$SERVER" == "" ]; then
 	echo "Please configure"
 	echo "this script"
 	echo "either editing"
@@ -62,10 +59,8 @@ then
 fi
 
 for KERNEL_MODULE in $KERNEL_MODULES; do
-	if ! cat /lib/modules/$(uname -r)/modules.builtin | grep -q "$(echo "$KERNEL_MODULE" | sed 's/\./\\\./g')"
-	then
-		if ! lsmod | grep -q "${KERNEL_MODULE%.*}"
-		then
+	if ! cat /lib/modules/$(uname -r)/modules.builtin | grep -q "$(echo "$KERNEL_MODULE" | sed 's/\./\\\./g')"; then
+		if ! lsmod | grep -q "${KERNEL_MODULE%.*}"; then
 			echo "The current Kernel doesn't"
 			echo "support CIFS (SAMBA)."
 			echo "Please update your"
@@ -75,10 +70,8 @@ for KERNEL_MODULE in $KERNEL_MODULES; do
 	fi
 done
 
-if [ "$(basename "THIS_SCRIPT_PATH")" != "mount_cifs.sh" ]
-then
-	if [ -f "/etc/network/if-up.d/mount_cifs" ] || [ -f "/etc/network/if-down.d/mount_cifs" ]
-	then
+if [ "$(basename "THIS_SCRIPT_PATH")" != "mount_cifs.sh" ]; then
+	if [ -f "/etc/network/if-up.d/mount_cifs" ] || [ -f "/etc/network/if-down.d/mount_cifs" ]; then
 		mount | grep "on / .*[(,]ro[,$]" -q && RO_ROOT="true"
 		[ "$RO_ROOT" == "true" ] && mount / -o remount,rw
 		rm "/etc/network/if-up.d/mount_cifs" > /dev/null 2>&1
@@ -89,11 +82,9 @@ then
 fi
 NET_UP_SCRIPT="/etc/network/if-up.d/$(basename ${THIS_SCRIPT_PATH%.*})"
 NET_DOWN_SCRIPT="/etc/network/if-down.d/$(basename ${THIS_SCRIPT_PATH%.*})"
-if [ "$MOUNT_AT_BOOT" ==  "true" ]
-then
+if [ "$MOUNT_AT_BOOT" ==  "true" ]; then
 	WAIT_FOR_SERVER="true"
-	if [ ! -f "$NET_UP_SCRIPT" ] || [ ! -f "$NET_DOWN_SCRIPT" ]
-	then
+	if [ ! -f "$NET_UP_SCRIPT" ] || [ ! -f "$NET_DOWN_SCRIPT" ]; then
 		mount | grep "on / .*[(,]ro[,$]" -q && RO_ROOT="true"
 		[ "$RO_ROOT" == "true" ] && mount / -o remount,rw
 		echo "#!/bin/bash"$'\n'"$(realpath "$THIS_SCRIPT_PATH") &" > "$NET_UP_SCRIPT"
@@ -104,8 +95,7 @@ then
 		[ "$RO_ROOT" == "true" ] && mount / -o remount,ro
 	fi
 else
-	if [ -f "$NET_UP_SCRIPT" ] || [ -f "$NET_DOWN_SCRIPT" ]
-	then
+	if [ -f "$NET_UP_SCRIPT" ] || [ -f "$NET_DOWN_SCRIPT" ]; then
 		mount | grep "on / .*[(,]ro[,$]" -q && RO_ROOT="true"
 		[ "$RO_ROOT" == "true" ] && mount / -o remount,rw
 		rm "$NET_UP_SCRIPT" > /dev/null 2>&1
@@ -115,31 +105,25 @@ else
 	fi
 fi
 
-if [ "$USERNAME" == "" ]
-then
+if [ "$USERNAME" == "" ]; then
 	MOUNT_OPTIONS="sec=none"
 else
 	MOUNT_OPTIONS="username=$USERNAME,password=$PASSWORD"
-	if [ "$DOMAIN" != "" ]
-	then
+	if [ "$DOMAIN" != "" ]; then
 		MOUNT_OPTIONS="$MOUNT_OPTIONS,domain=$DOMAIN"
 	fi
 fi
-if [ "$ADDITIONAL_MOUNT_OPTIONS" != "" ]
-then
+if [ "$ADDITIONAL_MOUNT_OPTIONS" != "" ]; then
 	MOUNT_OPTIONS="$MOUNT_OPTIONS,$ADDITIONAL_MOUNT_OPTIONS"
 fi
 
-if ! echo "$SERVER" | grep -q "^[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}$"
-then
+if ! echo "$SERVER" | grep -q "^[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}$"; then
 	if iptables -L > /dev/null 2>&1; then IPTABLES_SUPPORT="true"; else IPTABLES_SUPPORT="false"; fi
 	[ "$IPTABLES_SUPPORT" == "true" ] && if iptables -C INPUT -p udp --sport 137 -j ACCEPT > /dev/null 2>&1; then PRE_EXISTING_FIREWALL_RULE="true"; else PRE_EXISTING_FIREWALL_RULE="false"; fi
 	[ "$IPTABLES_SUPPORT" == "true" ] && [ "$PRE_EXISTING_FIREWALL_RULE" == "false" ] && iptables -I INPUT -p udp --sport 137 -j ACCEPT > /dev/null 2>&1
-	if [ "$WAIT_FOR_SERVER" == "true" ]
-	then
+	if [ "$WAIT_FOR_SERVER" == "true" ]; then
 		echo "Waiting for $SERVER"
-		until nmblookup $SERVER &>/dev/null
-		do
+		until nmblookup $SERVER &>/dev/null; do
 			[ "$IPTABLES_SUPPORT" == "true" ] && [ "$PRE_EXISTING_FIREWALL_RULE" == "false" ] && iptables -D INPUT -p udp --sport 137 -j ACCEPT > /dev/null 2>&1
 			sleep 1
 			[ "$IPTABLES_SUPPORT" == "true" ] && if iptables -C INPUT -p udp --sport 137 -j ACCEPT > /dev/null 2>&1; then PRE_EXISTING_FIREWALL_RULE="true"; else PRE_EXISTING_FIREWALL_RULE="false"; fi
@@ -149,11 +133,9 @@ then
 	SERVER=$(nmblookup $SERVER|awk 'END{print $1}')
 	[ "$IPTABLES_SUPPORT" == "true" ] && [ "$PRE_EXISTING_FIREWALL_RULE" == "false" ] && iptables -D INPUT -p udp --sport 137 -j ACCEPT > /dev/null 2>&1
 else
-	if [ "$WAIT_FOR_SERVER" == "true" ]
-	then
+	if [ "$WAIT_FOR_SERVER" == "true" ]; then
 		echo "Waiting for $SERVER"
-		until ping -q -w1 -c1 $SERVER &>/dev/null
-		do
+		until ping -q -w1 -c1 $SERVER &>/dev/null; do
 			sleep 1
 		done
 	fi
@@ -161,41 +143,30 @@ fi
 
 MOUNT_SOURCE="//$SERVER/$SHARE"
 
-if [ -n "$SHARE_DIRECTORY" ] && [ -n "$MOUNT_SOURCE" ]
-then
+if [ -n "$SHARE_DIRECTORY" ] && [ -n "$MOUNT_SOURCE" ]; then
 	MOUNT_SOURCE+=/$SHARE_DIRECTORY
  fi
 
-if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "|"; }
-then
-	if [ "$SINGLE_CIFS_CONNECTION" == "true" ]
-	then
+if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "|"; }; then
+	if [ "$SINGLE_CIFS_CONNECTION" == "true" ]; then
 		SCRIPT_NAME=${THIS_SCRIPT_PATH##*/}
 		SCRIPT_NAME=${SCRIPT_NAME%.*}
 		mkdir -p "/tmp/$SCRIPT_NAME" > /dev/null 2>&1
-		if mount -t cifs "$MOUNT_SOURCE" "/tmp/$SCRIPT_NAME" -o "$MOUNT_OPTIONS"
-		then
+		if mount -t cifs "$MOUNT_SOURCE" "/tmp/$SCRIPT_NAME" -o "$MOUNT_OPTIONS"; then
 			echo "$MOUNT_SOURCE mounted"
-			if [ "$LOCAL_DIR" == "*" ]
-			then
+			if [ "$LOCAL_DIR" == "*" ]; then
 				LOCAL_DIR=""
-				for DIRECTORY in "/tmp/$SCRIPT_NAME"/*
-				do
-					if [ -d "$DIRECTORY" ]
-					then
+				for DIRECTORY in "/tmp/$SCRIPT_NAME"/*; do
+					if [ -d "$DIRECTORY" ]; then
 						DIRECTORY=$(basename "$DIRECTORY")
-						for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES
-						do
-							if [ "$DIRECTORY" == "$SPECIAL_DIRECTORY" ]
-							then
+						for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES; do
+							if [ "$DIRECTORY" == "$SPECIAL_DIRECTORY" ]; then
 								DIRECTORY=""
 								break
 							fi
 						done
-						if [ "$DIRECTORY" != "" ]
-						then
-							if [ "$LOCAL_DIR" != "" ]
-							then
+						if [ "$DIRECTORY" != "" ]; then
+							if [ "$LOCAL_DIR" != "" ]; then
 								LOCAL_DIR="$LOCAL_DIR|"
 							fi
 							LOCAL_DIR="$LOCAL_DIR$DIRECTORY"
@@ -203,11 +174,9 @@ then
 					fi
 				done
 			fi
-			for DIRECTORY in $LOCAL_DIR
-			do
+			for DIRECTORY in $LOCAL_DIR; do
 				mkdir -p "$BASE_PATH/$DIRECTORY" > /dev/null 2>&1
-				if mount --bind "/tmp/$SCRIPT_NAME/$DIRECTORY" "$BASE_PATH/$DIRECTORY"
-				then
+				if mount --bind "/tmp/$SCRIPT_NAME/$DIRECTORY" "$BASE_PATH/$DIRECTORY"; then
 					echo "$DIRECTORY mounted"
 				else
 					echo "$DIRECTORY not mounted"
@@ -217,26 +186,19 @@ then
 			echo "$MOUNT_SOURCE not mounted"
 		fi
 	else
-		if [ "$LOCAL_DIR" == "*" ]
-		then
+		if [ "$LOCAL_DIR" == "*" ]; then
 			LOCAL_DIR=""
-			for DIRECTORY in "$BASE_PATH"/*
-			do
-				if [ -d "$DIRECTORY" ]
-				then
+			for DIRECTORY in "$BASE_PATH"/*; do
+				if [ -d "$DIRECTORY" ]; then
 					DIRECTORY=$(basename "$DIRECTORY")
-					for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES
-					do
-						if [ "$DIRECTORY" == "$SPECIAL_DIRECTORY" ]
-						then
+					for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES; do
+						if [ "$DIRECTORY" == "$SPECIAL_DIRECTORY" ]; then
 							DIRECTORY=""
 							break
 						fi
 					done
-					if [ "$DIRECTORY" != "" ]
-					then
-						if [ "$LOCAL_DIR" != "" ]
-						then
+					if [ "$DIRECTORY" != "" ]; then
+						if [ "$LOCAL_DIR" != "" ]; then
 							LOCAL_DIR="$LOCAL_DIR|"
 						fi
 						LOCAL_DIR="$LOCAL_DIR$DIRECTORY"
@@ -244,11 +206,9 @@ then
 				fi
 			done
 		fi
-		for DIRECTORY in $LOCAL_DIR
-		do
+		for DIRECTORY in $LOCAL_DIR; do
 			mkdir -p "$BASE_PATH/$DIRECTORY" > /dev/null 2>&1
-			if mount -t cifs "$MOUNT_SOURCE" "$BASE_PATH/$DIRECTORY" -o "$MOUNT_OPTIONS"
-			then
+			if mount -t cifs "$MOUNT_SOURCE" "$BASE_PATH/$DIRECTORY" -o "$MOUNT_OPTIONS"; then
 				echo "$DIRECTORY mounted"
 			else
 				echo "$DIRECTORY not mounted"
@@ -257,8 +217,7 @@ then
 	fi
 else
 	mkdir -p "$BASE_PATH/$LOCAL_DIR" > /dev/null 2>&1
-	if mount -t cifs "$MOUNT_SOURCE" "$BASE_PATH/$LOCAL_DIR" -o "$MOUNT_OPTIONS"
-	then
+	if mount -t cifs "$MOUNT_SOURCE" "$BASE_PATH/$LOCAL_DIR" -o "$MOUNT_OPTIONS"; then
 			echo "$LOCAL_DIR mounted"
 	else
 			echo "$LOCAL_DIR mounted"
