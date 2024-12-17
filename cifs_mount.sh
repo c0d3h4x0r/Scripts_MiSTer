@@ -43,10 +43,10 @@ THIS_SCRIPT_PATH="$0"
 if [ "$THIS_SCRIPT_PATH" == "bash" ]; then
 	THIS_SCRIPT_PATH=$(ps | grep "^ *$PPID " | grep -o "[^ ]*$")
 fi
-INI_PATH=${THIS_SCRIPT_PATH%.*}/options.ini
-if [ -f $INI_PATH ]; then
-	eval "$(cat $INI_PATH | tr -d '\r')"
-fi
+
+INI_DIR=${THIS_SCRIPT_PATH%.*}
+eval "$(cat $INI_DIR/global_options.ini | tr -d '\r')"
+eval "$(cat $INI_DIR/share_options.ini | tr -d '\r')"
 
 if [ "$SERVER" == "" ]; then
 	echo "Please configure"
