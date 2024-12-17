@@ -45,8 +45,20 @@ if [ "$THIS_SCRIPT_PATH" == "bash" ]; then
 fi
 
 INI_DIR=${THIS_SCRIPT_PATH%.*}
+if [ "${1##*.}" != "ini" ]; then
+	RETURN_CODE=0
+	while IFS= read -r -d '' INI_PATH; do
+		if ! ${THIS_SCRIPT_PATH} $INI_PATH; then
+			RETURN_CODE=$?
+		fi
+	done < <(find $INI_DIR/ -type f -name "*.ini" -and -not -name "example_share_options.ini" -and -not -name "global_options.ini" -print0)
+	exit $RETURN_CODE
+fi
+
+INI_PATH=$1
+echo "Processing: $INI_PATH"
 eval "$(cat $INI_DIR/global_options.ini | tr -d '\r')"
-eval "$(cat $INI_DIR/share_options.ini | tr -d '\r')"
+eval "$(cat $INI_PATH | tr -d '\r')"
 
 if [ "$SERVER" == "" ]; then
 	echo "Please configure"
