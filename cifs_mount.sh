@@ -103,12 +103,12 @@ SPECIAL_DIRECTORIES="config|linux|System Volume Information"
 
 #=========CODE STARTS HERE=========
 
-ORIGINAL_SCRIPT_PATH="$0"
-if [ "$ORIGINAL_SCRIPT_PATH" == "bash" ]
+THIS_SCRIPT_PATH="$0"
+if [ "$THIS_SCRIPT_PATH" == "bash" ]
 then
-	ORIGINAL_SCRIPT_PATH=$(ps | grep "^ *$PPID " | grep -o "[^ ]*$")
+	THIS_SCRIPT_PATH=$(ps | grep "^ *$PPID " | grep -o "[^ ]*$")
 fi
-INI_PATH=${ORIGINAL_SCRIPT_PATH%.*}.ini
+INI_PATH=${THIS_SCRIPT_PATH%.*}.ini
 if [ -f $INI_PATH ]
 then
 	eval "$(cat $INI_PATH | tr -d '\r')"
@@ -119,11 +119,11 @@ then
 	echo "Please configure"
 	echo "this script"
 	echo "either editing"
-	echo "${ORIGINAL_SCRIPT_PATH##*/}"
+	echo "${THIS_SCRIPT_PATH##*/}"
 	echo "or making a new"
 	echo "${INI_PATH##*/}"
 	exit 1
-fi 
+fi
 
 for KERNEL_MODULE in $KERNEL_MODULES; do
 	if ! cat /lib/modules/$(uname -r)/modules.builtin | grep -q "$(echo "$KERNEL_MODULE" | sed 's/\./\\\./g')"
@@ -164,7 +164,7 @@ for KERNEL_MODULE in $KERNEL_MODULES; do
 	fi
 done
 
-if [ "$(basename "ORIGINAL_SCRIPT_PATH")" != "mount_cifs.sh" ]
+if [ "$(basename "THIS_SCRIPT_PATH")" != "mount_cifs.sh" ]
 then
 	if [ -f "/etc/network/if-up.d/mount_cifs" ] || [ -f "/etc/network/if-down.d/mount_cifs" ]
 	then
@@ -176,8 +176,8 @@ then
 		[ "$RO_ROOT" == "true" ] && mount / -o remount,ro
 	fi
 fi
-NET_UP_SCRIPT="/etc/network/if-up.d/$(basename ${ORIGINAL_SCRIPT_PATH%.*})"
-NET_DOWN_SCRIPT="/etc/network/if-down.d/$(basename ${ORIGINAL_SCRIPT_PATH%.*})"
+NET_UP_SCRIPT="/etc/network/if-up.d/$(basename ${THIS_SCRIPT_PATH%.*})"
+NET_DOWN_SCRIPT="/etc/network/if-down.d/$(basename ${THIS_SCRIPT_PATH%.*})"
 if [ "$MOUNT_AT_BOOT" ==  "true" ]
 then
 	WAIT_FOR_SERVER="true"
@@ -185,7 +185,7 @@ then
 	then
 		mount | grep "on / .*[(,]ro[,$]" -q && RO_ROOT="true"
 		[ "$RO_ROOT" == "true" ] && mount / -o remount,rw
-		echo "#!/bin/bash"$'\n'"$(realpath "$ORIGINAL_SCRIPT_PATH") &" > "$NET_UP_SCRIPT"
+		echo "#!/bin/bash"$'\n'"$(realpath "$THIS_SCRIPT_PATH") &" > "$NET_UP_SCRIPT"
 		chmod +x "$NET_UP_SCRIPT"
 		echo "#!/bin/bash"$'\n'"umount -a -t cifs" > "$NET_DOWN_SCRIPT"
 		chmod +x "$NET_DOWN_SCRIPT"
@@ -259,7 +259,7 @@ if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "|"; }
 then
 	if [ "$SINGLE_CIFS_CONNECTION" == "true" ]
 	then
-		SCRIPT_NAME=${ORIGINAL_SCRIPT_PATH##*/}
+		SCRIPT_NAME=${THIS_SCRIPT_PATH##*/}
 		SCRIPT_NAME=${SCRIPT_NAME%.*}
 		mkdir -p "/tmp/$SCRIPT_NAME" > /dev/null 2>&1
 		if mount -t cifs "$MOUNT_SOURCE" "/tmp/$SCRIPT_NAME" -o "$MOUNT_OPTIONS"
