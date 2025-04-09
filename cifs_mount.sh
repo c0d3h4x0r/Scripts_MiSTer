@@ -158,12 +158,12 @@ resolve_local_dir_asterisk() {
 					break
 				fi
 			done
-			if [ "$DIRECTORY" != "" ]; then
-				if [ "$LOCAL_DIR" != "" ]; then
-					LOCAL_DIR="$LOCAL_DIR|"
-				fi
-				LOCAL_DIR="$LOCAL_DIR$DIRECTORY"
+			if [ "$DIRECTORY" == "" ]; then
+				continue
+			if [ "$LOCAL_DIR" != "" ]; then
+				LOCAL_DIR="$LOCAL_DIR|"
 			fi
+			LOCAL_DIR="$LOCAL_DIR$DIRECTORY"
 		fi
 	done
 }
