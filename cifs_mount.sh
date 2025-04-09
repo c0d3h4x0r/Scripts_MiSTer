@@ -145,7 +145,28 @@ MOUNT_SOURCE="//$SERVER/$SHARE"
 
 if [ -n "$SHARE_DIRECTORY" ] && [ -n "$MOUNT_SOURCE" ]; then
 	MOUNT_SOURCE+=/$SHARE_DIRECTORY
- fi
+fi
+
+resolve_local_dir_asterisk() {
+	LOCAL_DIR=""
+	for DIRECTORY in "$1"/*; do
+		if [ -d "$DIRECTORY" ]; then
+			DIRECTORY=$(basename "$DIRECTORY")
+			for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES; do
+				if [ "$DIRECTORY" == "$SPECIAL_DIRECTORY" ]; then
+					DIRECTORY=""
+					break
+				fi
+			done
+			if [ "$DIRECTORY" != "" ]; then
+				if [ "$LOCAL_DIR" != "" ]; then
+					LOCAL_DIR="$LOCAL_DIR|"
+				fi
+				LOCAL_DIR="$LOCAL_DIR$DIRECTORY"
+			fi
+		fi
+	done
+}
 
 if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "|"; }; then
 	if [ "$SINGLE_CIFS_CONNECTION" == "true" ]; then
@@ -187,24 +208,7 @@ if [ "$LOCAL_DIR" == "*" ] || { echo "$LOCAL_DIR" | grep -q "|"; }; then
 		fi
 	else
 		if [ "$LOCAL_DIR" == "*" ]; then
-			LOCAL_DIR=""
-			for DIRECTORY in "$BASE_PATH"/*; do
-				if [ -d "$DIRECTORY" ]; then
-					DIRECTORY=$(basename "$DIRECTORY")
-					for SPECIAL_DIRECTORY in $SPECIAL_DIRECTORIES; do
-						if [ "$DIRECTORY" == "$SPECIAL_DIRECTORY" ]; then
-							DIRECTORY=""
-							break
-						fi
-					done
-					if [ "$DIRECTORY" != "" ]; then
-						if [ "$LOCAL_DIR" != "" ]; then
-							LOCAL_DIR="$LOCAL_DIR|"
-						fi
-						LOCAL_DIR="$LOCAL_DIR$DIRECTORY"
-					fi
-				fi
-			done
+			resolve_local_dir_asterisk "$BASE_PATH"
 		fi
 		for DIRECTORY in $LOCAL_DIR; do
 			mkdir -p "$BASE_PATH/$DIRECTORY" > /dev/null 2>&1
